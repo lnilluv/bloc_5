@@ -1,32 +1,17 @@
 import os
-import re
-import warnings
-from datetime import datetime
-from pathlib import Path
 
 import boto3
 import mlflow
 import numpy as np
 import pandas as pd
-import splitfolders
-import tensorflow as tf
-import tensorflow_addons as tfa
 from botocore.client import Config
-# from lightgbm import LGBMRegressor
-from catboost import CatBoostRegressor
 from sklearn.compose import ColumnTransformer
-from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.impute import SimpleImputer
-from sklearn.linear_model import ElasticNet, Lasso, LinearRegression, Ridge
 from sklearn.metrics import classification_report, mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.svm import SVR
-from sklearn.tree import DecisionTreeRegressor
-from tensorflow.keras.layers import Conv2D, Dropout, MaxPool2D
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from xgboost import XGBRegressor
 
 # Create a connection to S3 using the Boto3 library
@@ -50,7 +35,7 @@ mlflow.set_experiment(EXPERIMENT_NAME)
 experiment = mlflow.get_experiment_by_name(EXPERIMENT_NAME)
 
 # Call mlflow autolog
-mlflow.tensorflow.autolog()
+mlflow.xgboost.autolog()
 
 # Start the experiment run
 with mlflow.start_run(experiment_id=experiment.experiment_id):
@@ -92,20 +77,12 @@ with mlflow.start_run(experiment_id=experiment.experiment_id):
 
     # List of models
     models = [
-        CatBoostRegressor(verbose=0)
+        XGBRegressor()
     ]
 
     # List of param_grids for each model
     param_grids = [
-    {
-        'model__depth': [6, 8, 10],
-        'model__learning_rate': [0.05, 0.1, 0.2],
-        'model__iterations': [1000, 1500, 2000],
-        'model__l2_leaf_reg': [2, 3, 4],
-        'model__colsample_bylevel': [0.5, 0.8, 1],
-        'model__subsample': [0.5, 0.8, 1],
-        'model__border_count': [32, 64, 128],
-    }
+    {'model__gamma': 0, 'model__learning_rate': 0.1, 'model__max_depth': 10, 'model__min_child_weight': 5, 'model__n_estimators': 100}
     ]
 
     # Initialize an empty DataFrame to store the results
