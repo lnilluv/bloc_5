@@ -85,10 +85,6 @@ with mlflow.start_run(experiment_id=experiment.experiment_id):
     {'model__gamma': 0, 'model__learning_rate': 0.1, 'model__max_depth': 10, 'model__min_child_weight': 5, 'model__n_estimators': 100}
     ]
 
-    # Initialize an empty DataFrame to store the results
-    results_df = pd.DataFrame(columns=['Model', 'Best_Params', 'Best_Score'])
-
-    results = []
 
     for i, model in enumerate(models):
         param_grid = param_grids[i]
