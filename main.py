@@ -1,8 +1,17 @@
+import os
 import re
 import warnings
+from datetime import datetime
+from pathlib import Path
 
+import boto3
+import mlflow
 import numpy as np
 import pandas as pd
+import splitfolders
+import tensorflow as tf
+import tensorflow_addons as tfa
+from botocore.client import Config
 # from lightgbm import LGBMRegressor
 from catboost import CatBoostRegressor
 from sklearn.compose import ColumnTransformer
@@ -10,83 +19,111 @@ from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import ElasticNet, Lasso, LinearRegression, Ridge
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import classification_report, mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
+from tensorflow.keras.layers import Conv2D, Dropout, MaxPool2D
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from xgboost import XGBRegressor
 
-# Load the data
-df = pd.read_csv('data/get_around_pricing_project.csv', index_col=0)
+# Create a connection to S3 using the Boto3 library
+s3 = boto3.resource('s3',
+                    endpoint_url=os.getenv('MLFLOW_S3_ENDPOINT_URL'),
+                    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+                    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+                    config=Config(signature_version='s3v4'),
+                    region_name='us-east-1')
 
-# Extract the features
-X = df.drop('rental_price_per_day', axis=1)
+# Set your variables for your environment
+EXPERIMENT_NAME = "getaround-bloc5"
 
-# Extract the target column
-y = df.loc[:, 'rental_price_per_day']
+# Set tracking URI to your Heroku application
+mlflow.set_tracking_uri("https://mlflow.pryda.dev")
 
-# Train / test split 
-X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42, test_size = 0.2)
+# Set experiment's info 
+mlflow.set_experiment(EXPERIMENT_NAME)
 
-# determine categorical and numerical features
-numerical_features = X.select_dtypes(include=['int64', 'float64']).columns
-categorical_features = X.select_dtypes(include=['object', 'bool']).columns
+# Get our experiment info
+experiment = mlflow.get_experiment_by_name(EXPERIMENT_NAME)
 
-# Numerical Transformer
-numerical_transformer = Pipeline([
-        ('imputer', SimpleImputer(strategy='mean')),
-        ('scaler', StandardScaler())
-])
+# Call mlflow autolog
+mlflow.tensorflow.autolog()
 
-# Categorical Transformer
-categorical_transformer = Pipeline([
-        ('imputer', SimpleImputer(strategy='most_frequent')),
-        ('encoder', OneHotEncoder(drop='first', handle_unknown='ignore'))
-])
+# Start the experiment run
+with mlflow.start_run(experiment_id=experiment.experiment_id):
 
-preprocessor = ColumnTransformer(
-    transformers=[
-        ("numerical_transformer", numerical_transformer, numerical_features),
-        ("categorical_transformer", categorical_transformer, categorical_features)
-    ]
-)
+    # Load the data
+    df = pd.read_csv('data/get_around_pricing_project.csv', index_col=0)
 
-# List of models
-models = [
-    CatBoostRegressor(verbose=0)
-]
+    # Extract the features
+    X = df.drop('rental_price_per_day', axis=1)
 
-# List of param_grids for each model
-param_grids = [
-{
-    'model__depth': [6, 8, 10],
-    'model__learning_rate': [0.05, 0.1, 0.2],
-    'model__iterations': [1000, 1500, 2000],
-    'model__l2_leaf_reg': [2, 3, 4],
-    'model__colsample_bylevel': [0.5, 0.8, 1],
-    'model__subsample': [0.5, 0.8, 1],
-    'model__border_count': [32, 64, 128],
-}
-]
+    # Extract the target column
+    y = df.loc[:, 'rental_price_per_day']
 
-# Initialize an empty DataFrame to store the results
-results_df = pd.DataFrame(columns=['Model', 'Best_Params', 'Best_Score'])
+    # Train / test split 
+    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42, test_size = 0.2)
 
-results = []
+    # determine categorical and numerical features
+    numerical_features = X.select_dtypes(include=['int64', 'float64']).columns
+    categorical_features = X.select_dtypes(include=['object', 'bool']).columns
 
-for i, model in enumerate(models):
-    param_grid = param_grids[i]
-    
-    # Create a pipeline with the preprocessor and the model
-    pipeline = Pipeline([
-        ('preprocessor', preprocessor),
-        ('model', model)
+    # Numerical Transformer
+    numerical_transformer = Pipeline([
+            ('imputer', SimpleImputer(strategy='mean')),
+            ('scaler', StandardScaler())
     ])
 
-    # Perform grid search with the current model and its param_grid
-    grid = GridSearchCV(pipeline, param_grid, cv=5, scoring='neg_mean_squared_error', n_jobs=-1, verbose=1)
+    # Categorical Transformer
+    categorical_transformer = Pipeline([
+            ('imputer', SimpleImputer(strategy='most_frequent')),
+            ('encoder', OneHotEncoder(drop='first', handle_unknown='ignore'))
+    ])
 
-    grid.fit(X_train, y_train)
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ("numerical_transformer", numerical_transformer, numerical_features),
+            ("categorical_transformer", categorical_transformer, categorical_features)
+        ]
+    )
+
+    # List of models
+    models = [
+        CatBoostRegressor(verbose=0)
+    ]
+
+    # List of param_grids for each model
+    param_grids = [
+    {
+        'model__depth': [6, 8, 10],
+        'model__learning_rate': [0.05, 0.1, 0.2],
+        'model__iterations': [1000, 1500, 2000],
+        'model__l2_leaf_reg': [2, 3, 4],
+        'model__colsample_bylevel': [0.5, 0.8, 1],
+        'model__subsample': [0.5, 0.8, 1],
+        'model__border_count': [32, 64, 128],
+    }
+    ]
+
+    # Initialize an empty DataFrame to store the results
+    results_df = pd.DataFrame(columns=['Model', 'Best_Params', 'Best_Score'])
+
+    results = []
+
+    for i, model in enumerate(models):
+        param_grid = param_grids[i]
+        
+        # Create a pipeline with the preprocessor and the model
+        pipeline = Pipeline([
+            ('preprocessor', preprocessor),
+            ('model', model)
+        ])
+
+        # Perform grid search with the current model and its param_grid
+        grid = GridSearchCV(pipeline, param_grid, cv=5, scoring='neg_mean_squared_error', n_jobs=-1, verbose=1)
+
+        grid.fit(X_train, y_train)
 
