@@ -115,7 +115,7 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     volumes:
-      - openbrain_dbdata:/var/lib/mysql:rw
+      - getaround_dbdata:/var/lib/mysql:rw
 
 
   mlflow:
