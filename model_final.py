@@ -14,6 +14,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from xgboost import XGBRegressor
 
+        #   MINIO_ACCESS_KEY: AKIAIOSFODNN7EXAMPLE
+        #   MINIO_SECRET_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 # Create a connection to S3 using the Boto3 library
 s3 = boto3.resource('s3',
                     endpoint_url=os.getenv('MLFLOW_S3_ENDPOINT_URL'),
@@ -82,7 +84,7 @@ with mlflow.start_run(experiment_id=experiment.experiment_id):
 
     # List of param_grids for each model
     param_grids = [
-    {'model__gamma': 0, 'model__learning_rate': 0.1, 'model__max_depth': 10, 'model__min_child_weight': 5, 'model__n_estimators': 100}
+    {'model__gamma': [0], 'model__learning_rate': [0.1], 'model__max_depth': [10], 'model__min_child_weight': [5], 'model__n_estimators': [100]}
     ]
 
 

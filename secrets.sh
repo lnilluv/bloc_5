@@ -1,0 +1,5 @@
+export AWS_ACCESS_KEY_ID="adm"
+export AWS_SECRET_ACCESS_KEY="B4mb0u4eveR"
+export MLFLOW_S3_ENDPOINT_URL="https://bucket.pryda.dev"
+export MLFLOW_ARTIFACT_LOCATION="s3://mlflow"
+export MLFLOW_EXPERIMENT_NAME="getaround"
