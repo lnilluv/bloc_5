@@ -14,6 +14,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from xgboost import XGBRegressor
 
+        #   MINIO_ACCESS_KEY: AKIAIOSFODNN7EXAMPLE
+        #   MINIO_SECRET_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 # Create a connection to S3 using the Boto3 library
 s3 = boto3.resource('s3',
                     endpoint_url=os.getenv('MLFLOW_S3_ENDPOINT_URL'),
@@ -50,7 +52,7 @@ with mlflow.start_run(experiment_id=experiment.experiment_id):
     y = df.loc[:, 'rental_price_per_day']
 
     # Train / test split 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42, test_size=0.2)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42, test_size = 0.2)
 
     # determine categorical and numerical features
     numerical_features = X.select_dtypes(include=['int64', 'float64']).columns
@@ -58,14 +60,14 @@ with mlflow.start_run(experiment_id=experiment.experiment_id):
 
     # Numerical Transformer
     numerical_transformer = Pipeline([
-        ('imputer', SimpleImputer(strategy='mean')),
-        ('scaler', StandardScaler())
+            ('imputer', SimpleImputer(strategy='mean')),
+            ('scaler', StandardScaler())
     ])
 
     # Categorical Transformer
     categorical_transformer = Pipeline([
-        ('imputer', SimpleImputer(strategy='most_frequent')),
-        ('encoder', OneHotEncoder(drop='first', handle_unknown='ignore'))
+            ('imputer', SimpleImputer(strategy='most_frequent')),
+            ('encoder', OneHotEncoder(drop='first', handle_unknown='ignore'))
     ])
 
     preprocessor = ColumnTransformer(
@@ -74,11 +76,29 @@ with mlflow.start_run(experiment_id=experiment.experiment_id):
             ("categorical_transformer", categorical_transformer, categorical_features)
         ]
     )
-
+    
     # List of models
-    model = Pipeline([
+    models = [
+        XGBRegressor()
+    ]
+
+    # List of param_grids for each model
+    param_grids = [
+    {'model__gamma': [0], 'model__learning_rate': [0.1], 'model__max_depth': [10], 'model__min_child_weight': [5], 'model__n_estimators': [100]}
+    ]
+
+
+    for i, model in enumerate(models):
+        param_grid = param_grids[i]
+        
+        # Create a pipeline with the preprocessor and the model
+        pipeline = Pipeline([
             ('preprocessor', preprocessor),
-            ('model', XGBRegressor(gamma=0, learning_rate=0.1, max_depth=10, min_child_weight=5, n_estimators=100))
+            ('model', model)
         ])
 
-    model.fit(X_train, y_train)
+        # Perform grid search with the current model and its param_grid
+        grid = GridSearchCV(pipeline, param_grid, cv=5, scoring='neg_mean_squared_error', n_jobs=-1, verbose=1)
+
+        grid.fit(X_train, y_train)
+
