@@ -1,7 +1,7 @@
 docker build -t getaround-streamlit .
 
 docker run -it\
-  -p 4000:4000\
+  -p 4001:4001\
   -v "$(pwd):/app"\
-  -e PORT=4000\
+  -e PORT=4001\
   getaround-streamlit
