@@ -1,4 +1,0 @@
-cryptography
-boto3
-mlflow==2.1.1
-pymysql
