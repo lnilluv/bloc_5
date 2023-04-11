@@ -205,22 +205,22 @@ with col2:
     st.markdown("In proportion, the mobile checkin rentals are more likely to be late  \nbut there are also more users using mobile")
     st.markdown("We can't see a direct correlation between the checkin type and the cancellation rate")
 
-st.markdown("##### Average delays per checkin type (all rentals)") ## average delays 
+# st.markdown("##### Average delays per checkin type (all rentals)") ## average delays 
 
-# Display average delays (entire dataset)
-# st.markdown(f"Average delay (All): {average_all:.2f} minutes")
-st.markdown(f"Average delay (Mobile): {average_mobile:.2f} minutes")
-st.markdown(f"Average delay (Connect): {average_connect:.2f} minutes")
+# # Display average delays (entire dataset)
+# # st.markdown(f"Average delay (All): {average_all:.2f} minutes")
+# st.markdown(f"Average delay (Mobile): {average_mobile:.2f} minutes")
+# st.markdown(f"Average delay (Connect): {average_connect:.2f} minutes")
 
 # Calculate average delay when delay_status is late
 all_data_late = data[data['delay_status'] == 'late']['delay_at_checkout_in_minutes'].mean()
 mobile_data_late = data[data['delay_status'] == 'late'][data['checkin_type'] == 'mobile']['delay_at_checkout_in_minutes'].mean()
 connect_data_late = data[data['delay_status'] == 'late'][data['checkin_type'] == 'connect']['delay_at_checkout_in_minutes'].mean()
 
-st.markdown("##### Average delays per checkin type (late rentals)")
-# st.markdown(f"Average delay (All): {all_data_late:.2f} minutes")
-st.markdown(f"Average delay (Mobile): {mobile_data_late:.2f} minutes")
-st.markdown(f"Average delay (Connect): {connect_data_late:.2f} minutes")
+# st.markdown("##### Average delays per checkin type (late rentals)")
+# # st.markdown(f"Average delay (All): {all_data_late:.2f} minutes")
+# st.markdown(f"Average delay (Mobile): {mobile_data_late:.2f} minutes")
+# st.markdown(f"Average delay (Connect): {connect_data_late:.2f} minutes")
 
 st.title("Cars analysis") 
 
