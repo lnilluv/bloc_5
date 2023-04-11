@@ -1,8 +1,6 @@
+
+ 
+
 [browser]
-serverAddress = '0.0.0.0'
-
-[global]
-dataFrameSerialization = "legacy"
-
-[theme]
-base="dark"
+serverAddress = '127.0.0.1'
+port = '80'
