@@ -4,7 +4,7 @@
 
 ## Contact
 
-You can write me at **laurent.nilluv@gmail.com**
+You can contact me at **laurent.nilluv@gmail.com**
 
 ## Context 
 
