@@ -1,11 +1,3 @@
-## Video presentation
-
-[Bloc 5 | Getaround - Video presentation](https://youtu.be/QUoh_RfaAc8)
-
-## Contact
-
-You can contact me at **laurent.nilluv@gmail.com**
-
 ## Context 
 
 Getaround is a service where drivers rent cars from owners for a specific time period, from an hour to a few days long. 
