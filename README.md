@@ -1,5 +1,7 @@
 ## Context 
 
+Video of project: https://youtu.be/QUoh_RfaAc8
+
 Getaround is a service where drivers rent cars from owners for a specific time period, from an hour to a few days long. 
 
 When renting a car, clients have to complete a checkin flow at the beginning of the rental and a checkout flow at the end of the rental in order to:
